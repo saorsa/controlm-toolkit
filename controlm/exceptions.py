@@ -1,10 +1,8 @@
 
 
-class CtmXmlParserException (Exception):
+class CtmXmlParserException (BaseException):
 
-    def __init__(self, *args, **kwargs):  # real signature unknown
-        pass
+    def __init__(self, message: str, error_code: int = -1):
+        self.message = message
+        self.error_code = error_code
 
-    @staticmethod  # known case of __new__
-    def __new__(*cls, **kwargs):  # real signature unknown
-        pass
