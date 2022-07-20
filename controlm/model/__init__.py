@@ -5,3 +5,4 @@ from .ctm_simple_folder import CtmSimpleFolder
 from .ctm_smart_folder import CtmSmartFolder
 from .ctm_var_data import CtmVarData
 from .ctm_tag_data import CtmTagData
+from .ctm_job_data import CtmJobData

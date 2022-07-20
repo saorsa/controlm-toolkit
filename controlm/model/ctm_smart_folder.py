@@ -1,7 +1,9 @@
-from typing import Optional
+from typing import Optional, List
 from .ctm_def_table_item import CtmDefTableItem
 from .ctm_var_data import CtmVarData
 from .ctm_tag_data import CtmTagData
+from .ctm_job_data import CtmJobData
+
 
 class CtmSmartFolder (CtmDefTableItem):
 
@@ -22,6 +24,7 @@ class CtmSmartFolder (CtmDefTableItem):
         self.node_id: Optional[str] = None
         self.variables: [CtmVarData] = []
         self.rule_based_calendars: [CtmTagData] = []
+        self.jobs: List[CtmJobData] = []
 
     @property
     def is_smart(self) -> bool:

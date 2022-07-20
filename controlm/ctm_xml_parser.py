@@ -9,6 +9,7 @@ from model.ctm_simple_folder import CtmSimpleFolder
 from model.ctm_smart_folder import CtmSmartFolder
 from model.ctm_var_data import CtmVarData
 from model.ctm_tag_data import CtmTagData
+from model.ctm_job_data import CtmJobData
 from exceptions import CtmXmlParserException
 
 SUPPORTED_DEF_TABLE_SIMPLE_ITEM_TYPES: Final = [
@@ -154,6 +155,10 @@ class CtmXmlParser:
                 tag_data = self.parse_tag_data(child)
                 self.logger.debug(f"Processed child rule based calendar {child.tag}: {tag_data.__dict__}")
                 result.rule_based_calendars.append(tag_data)
+            elif child.tag == 'JOB':
+                job_data = self.parse_job_data(child)
+                self.logger.debug(f"Processed child job {child.tag}: {job_data.__dict__}")
+                result.jobs.append(job_data)
             else:
                 self.logger.warning(f"Unsupported SMART_FOLDER child element {child.tag}")
         return result
@@ -206,6 +211,14 @@ class CtmXmlParser:
         result.active_till = self.parse_attribute_value_or_default(xml_element, "ACTIVE_TILL")
         result.tags_active_till = self.parse_attribute_value_or_default(xml_element, "TAGS_ACTIVE_TILL")
         result.level = self.parse_attribute_value_or_default(xml_element, "LEVEL")
+        return result
+
+    def parse_job_data(self, xml_element: etree.ElementTree) -> CtmJobData:
+        if xml_element.tag != 'JOB':
+            raise CtmXmlParserException(
+                f"The XML element {xml_element.tag} is not a Control-M variable."
+            )
+        result = CtmJobData(xml_element.tag)
         return result
 
     def _validate_xsd_path(self) -> None:
