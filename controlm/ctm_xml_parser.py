@@ -150,7 +150,7 @@ class CtmXmlParser:
                 var_data = self.parse_var_data(child)
                 self.logger.debug(f"Processed child variable {child.tag}: {var_data.__dict__}")
                 result.variables.append(var_data)
-            if child.tag == 'RULE_BASED_CALENDAR':
+            elif child.tag == 'RULE_BASED_CALENDAR':
                 tag_data = self.parse_tag_data(child)
                 self.logger.debug(f"Processed child rule based calendar {child.tag}: {tag_data.__dict__}")
                 result.rule_based_calendars.append(tag_data)
