@@ -1,4 +1,4 @@
-from . import CtmDefTableItem
+from .ctm_def_table_item import CtmDefTableItem
 
 
 class CtmSimpleFolder (CtmDefTableItem):

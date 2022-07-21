@@ -1,5 +1,6 @@
-from typing import Optional
-from . import CtmDefTableItem
+from typing import Optional, List
+from .ctm_def_table_item import CtmDefTableItem
+from .ctm_var_data import CtmVarData
 
 
 class CtmJobData (CtmDefTableItem):
@@ -118,3 +119,4 @@ class CtmJobData (CtmDefTableItem):
         self.f_procs: Optional[str] = None
         self.t_pg_ms: Optional[str] = None
         self.t_procs: Optional[str] = None
+        self.variables: List[CtmVarData] = []
