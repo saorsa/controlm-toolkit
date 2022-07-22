@@ -1,8 +1,16 @@
 from abc import ABC
+from enum import Enum
 from logging import Logger
 from typing import Dict, Optional
 from common.logging.helpers import create_console_logger
 from controlm.model import CtmDefTable
+
+
+class CtmCacheItemState (Enum):
+    UNKNOWN = 'UNKNOWN',
+    PROGRESS = 'PROGRESS',
+    FAULT = 'FAULT',
+    COMPLETE = 'COMPLETE'
 
 
 class CtmRestCache (ABC):
@@ -33,12 +41,12 @@ class CtmRestCache (ABC):
                 self.logger.warning(f"Deleting cache item for key [{key}]...")
                 del self._dict[key]
         else:
-            self.logger.warning(f"Setting cache item for key [{key}]...")
+            self.logger.warning(f"Setting cache item for key [{key}] = {value}")
             self._dict[key] = value
 
     @property
-    def cache_state(self) -> str:
-        return self.get_cache_item('CACHE_STATE') or 'unknown'
+    def cache_state(self) -> CtmCacheItemState:
+        return self.get_cache_item('CACHE_STATE') or CtmCacheItemState.UNKNOWN
 
     @property
     def cache_error(self) -> Optional[any]:
@@ -46,14 +54,14 @@ class CtmRestCache (ABC):
 
     def set_cache_state_error(self, error: any) -> None:
         if error:
-            self.set_cache_item('CACHE_STATE', 'fault')
+            self.set_cache_item('CACHE_STATE', CtmCacheItemState.FAULT)
             self.set_cache_item('CACHE_ERROR', error)
         else:
-            self.set_cache_item('CACHE_STATE', 'unknown')
+            self.set_cache_item('CACHE_STATE', CtmCacheItemState.UNKNOWN)
             self.set_cache_item('CACHE_ERROR', None)
 
     def set_cache_state_progress(self) -> None:
-        self.set_cache_item('CACHE_STATE', 'progress')
+        self.set_cache_item('CACHE_STATE', CtmCacheItemState.PROGRESS)
 
     def set_cache_state_complete(self,
                                  def_table: CtmDefTable,
@@ -62,7 +70,7 @@ class CtmRestCache (ABC):
         self.set_cache_item('ALL_FOLDERS', def_table)
         self.set_cache_item('DATA_CENTER_NAMES', data_center_names)
         self.set_cache_item('DATA_CENTER_STATS', data_center_stats)
-        self.set_cache_item('CACHE_STATE', 'complete')
+        self.set_cache_item('CACHE_STATE', CtmCacheItemState.COMPLETE)
 
 
-sharedCache: CtmRestCache = CtmRestCache()
+shared_rest_cache: CtmRestCache = CtmRestCache()
