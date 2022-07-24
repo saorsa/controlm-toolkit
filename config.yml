@@ -1,0 +1,15 @@
+core:
+  logging:
+    version: 1
+    formatters:
+      formatter:
+        format: "%(asctime)s - %(name)s - %(levelname)9s - %(message)s (%(filename)s:%(lineno)d)"
+    handlers:
+      console:
+        class: "logging.StreamHandler"
+        level: "DEBUG"
+        formatter: "formatter"
+        stream: "ext://sys.stderr"
+    root:
+      level: "DEBUG"
+      handlers: ["console"]

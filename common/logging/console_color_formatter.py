@@ -10,7 +10,7 @@ class ConsoleColorFormatter(logging.Formatter):
     red = "\x1b[31;20m"
     bold_red = "\x1b[31;1m"
     reset = "\x1b[0m"
-    format = "%(asctime)s - %(name)s - %(levelname)9s - %(message)s (%(filename)s:%(lineno)d)"
+    format = "%(asctime)s - %(name)35s - %(levelname)12s - %(message)s (%(filename)s:%(lineno)d)"
 
     FORMATS: Dict[int, str] = {
         logging.DEBUG: grey + format + reset,
