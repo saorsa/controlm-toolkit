@@ -48,7 +48,6 @@ class CtmRepository (ABC):
             self._logger.warning('Task runner argument is None. Creating new task runner instance.')
         self._task_runner: TaskRunner = task_runner or TaskRunner()
         self._logger.info(f"Repository '{self.identifier}' initialized.")
-        self._is_caching: bool = False
         self._cache_lock: Lock = Lock()
         self._cache_process_lock: Lock = Lock()
         self._cache_task: Optional[Future] = None
@@ -105,21 +104,26 @@ class CtmRepository (ABC):
     def is_cache_ready(self) -> bool:
         return not self.is_cache_corrupt and self.cache_state == CtmRepositoryCacheState.COMPLETE
 
+    @property
+    def is_populating_cache(self) -> bool:
+        return self.cache_state == CtmRepositoryCacheState.PROGRESS
+
     def populate_cache(self, *args, **kwargs):
         self.logger.debug(f"Populate cache invoked with *args={args} and **kwargs={kwargs}")
         task_meta: TaskMetaData = kwargs['task_meta']
         task_meta.invalidate_thread()
         with self._cache_process_lock:
-            if self._is_caching:
+            if self.is_populating_cache:
                 self.logger.warning("Already running cache initialization. Subsequent calls will be ignored.")
                 return
+            self.cache.set_items_from_dict({
+                CtmRepositoryCacheKeys.CACHE_ERROR: None,
+                CtmRepositoryCacheKeys.CACHE_STATE: CtmRepositoryCacheState.PROGRESS
+            })
             self.logger.debug("Starting cache initialization...")
-            self._is_caching = True
             date_start = datetime.now()
             parser = CtmXmlParser()
             try:
-                self.cache.set_item(CtmRepositoryCacheKeys.CACHE_ERROR, None)
-                self.cache.set_item(CtmRepositoryCacheKeys.CACHE_STATE, CtmRepositoryCacheState.PROGRESS)
                 def_table = parser.parse_xml('./resources/PROD_CTM.all.xml')
                 data_center_keys = []
                 data_center_aggregates = {}
@@ -158,12 +162,11 @@ class CtmRepository (ABC):
                 parser.logger.warning(f"Parsing started at [{date_start}], finished at [{date_end}]. "
                                       f"Duration = {diff_seconds} seconds")
                 task_meta.set_finished(date_end)
-                self._is_caching = False
                 self._cache_task = None
 
     def schedule_populate_cache(self) -> Optional[Future]:
         with self._cache_lock:
-            if self._is_caching:
+            if self.is_populating_cache:
                 self.logger.warning("Already running cache initialization. Returning existing task...")
                 return self._cache_task
             self.logger.info("Scheduling cache initialization task...")

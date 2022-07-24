@@ -8,11 +8,11 @@ def create_console_logger(
         console_log_level: int = None) -> logging.Logger:
 
     logger = logging.getLogger(logger_name)
-    min_log_level = min_log_level or logging.INFO
+    min_log_level = min_log_level or logging.WARNING
     logger.setLevel(min_log_level)
 
     ch = logging.StreamHandler()
-    console_log_level = console_log_level or logging.INFO
+    console_log_level = console_log_level or logging.WARNING
     ch.setLevel(console_log_level)
     ch.setFormatter(ConsoleColorFormatter())
     logger.addHandler(ch)

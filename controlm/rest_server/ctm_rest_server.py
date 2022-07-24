@@ -6,8 +6,7 @@ from dependency_injector.wiring import Provide, inject
 from flask import Flask
 from controlm.di import DIRestServer
 from controlm.services import CtmRepository
-from controlm.rest_server.blueprints import meta_endpoint
-from controlm.rest_server.blueprints.cache import cache_blueprint
+from controlm.rest_server.blueprints import meta_endpoint, cache_blueprint, tasks_blueprint
 from controlm.rest_server.blueprints.data_centers import data_centers_blueprint
 
 
@@ -18,6 +17,8 @@ class CtmRestServerJSONEncoder(json.JSONEncoder):
             return obj
         if isinstance(obj, int):
             return obj
+        if isinstance(obj, float):
+            return obj
         if isinstance(obj, datetime):
             return obj.isoformat()
         if isinstance(obj, enum.Enum):
@@ -25,11 +26,10 @@ class CtmRestServerJSONEncoder(json.JSONEncoder):
         if isinstance(obj, set):
             return list(obj)
         if isinstance(obj, dict):
-            print(dict)
             return list(obj)
         if hasattr(obj, '_tag_name'):
             return obj.__dict__
-        return json.JSONEncoder.default(self, obj.__dict__)
+        return obj.__dict__
 
 
 class CtmRestServer(ABC):
@@ -47,6 +47,7 @@ class CtmRestServer(ABC):
         self.app.register_blueprint(meta_endpoint)
         self.app.register_blueprint(cache_blueprint)
         self.app.register_blueprint(data_centers_blueprint)
+        self.app.register_blueprint(tasks_blueprint)
 
     @inject
     def run(self,

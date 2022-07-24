@@ -92,6 +92,10 @@ class TaskRunner (ABC):
     def tasks(self) -> [Future]:
         return self._futures
 
+    @property
+    def tasks_meta_data(self) -> Dict[int, TaskMetaData]:
+        return self._meta
+
     def shutdown(self, wait: bool = True):
         self.logger.info("Task runner shutting down...")
         self._thread_pool.shutdown(wait=wait)
