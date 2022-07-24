@@ -9,6 +9,7 @@ from threading import Lock
 from common.caching import CacheStore
 from common.logging import create_console_logger
 from common.threading import TaskRunner, TaskMetaData
+from controlm.model import CtmJobData
 from controlm.services import CtmXmlParser
 
 
@@ -21,9 +22,12 @@ class CtmRepositoryCacheKeys:
     CACHE_POPULATE_DURATION: Final = f"{__name__}.cache.populate.duration"
     CACHE_TIMESTAMP: Final = f"{__name__}.cache.timestamp"
 
-    CONTROL_M_ALL_FOLDERS = f"{__name__}.cache.controlm.folders.all"
+    CONTROL_M_FOLDERS = f"{__name__}.cache.controlm.folders"
     CONTROL_M_SERVERS = f"{__name__}.cache.controlm.servers"
     CONTROL_M_SERVER_INFOS = f"{__name__}.cache.controlm.server.infos"
+    CONTROL_M_NODES = f"{__name__}.cache.controlm.nodes"
+    CONTROL_M_APPLICATIONS = f"{__name__}.cache.controlm.applications"
+    CONTROL_M_SUB_APPLICATIONS = f"{__name__}.cache.controlm.sub_applications"
 
 
 class CtmRepositoryCacheState (Enum):
@@ -126,6 +130,9 @@ class CtmRepository (ABC):
             try:
                 def_table = parser.parse_xml('./resources/PROD_CTM.all.xml')
                 data_center_keys = []
+                application_keys = []
+                sub_application_keys = []
+                node_id_keys = []
                 data_center_aggregates = {}
                 for item in def_table.items:
                     if hasattr(item, 'data_center'):
@@ -136,16 +143,36 @@ class CtmRepository (ABC):
                                 'applications': {}
                             }
                         data_center_apps = data_center_aggregates[item.data_center]['applications']
+                        if hasattr(item, 'node_id') and item.node_id and item.node_id not in node_id_keys:
+                            node_id_keys.append(item.node_id)
                         if hasattr(item, 'application') and item.application:
                             if item.application not in data_center_apps:
                                 data_center_apps[item.application] = []
+                                application_keys.append(item.application)
                             active_app_subs = data_center_apps[item.application]
                             if hasattr(item, 'sub_application') and item.sub_application not in active_app_subs:
                                 active_app_subs.append(item.sub_application)
+                                sub_application_keys.append(item.sub_application)
+                            if hasattr(item, 'jobs') and item.jobs:
+                                for job in item.jobs:
+                                    if isinstance(job, CtmJobData):
+                                        if job.node_id and job.node_id not in node_id_keys:
+                                            node_id_keys.append(job.node_id)
+                                        if job.application and job.application not in data_center_apps:
+                                            data_center_apps[job.application] = []
+                                            application_keys.append(job.application)
+                                            subs = data_center_apps[job.application]
+                                            if job.sub_application and job.sub_application not in subs:
+                                                subs.append(job.sub_application)
+                                                sub_application_keys.append(job.sub_application)
+
                 self.cache.set_items_from_dict({
-                    CtmRepositoryCacheKeys.CONTROL_M_ALL_FOLDERS: def_table,
+                    CtmRepositoryCacheKeys.CONTROL_M_FOLDERS: def_table,
                     CtmRepositoryCacheKeys.CONTROL_M_SERVERS: data_center_keys,
                     CtmRepositoryCacheKeys.CONTROL_M_SERVER_INFOS: data_center_aggregates,
+                    CtmRepositoryCacheKeys.CONTROL_M_NODES: node_id_keys,
+                    CtmRepositoryCacheKeys.CONTROL_M_APPLICATIONS: application_keys,
+                    CtmRepositoryCacheKeys.CONTROL_M_SUB_APPLICATIONS: sub_application_keys,
                     CtmRepositoryCacheKeys.CACHE_STATE: CtmRepositoryCacheState.COMPLETE,
                 })
             except BaseException as ex:
@@ -159,8 +186,8 @@ class CtmRepository (ABC):
                 self.cache.set_item(CtmRepositoryCacheKeys.CACHE_POPULATE_END, date_end)
                 self.cache.set_item(CtmRepositoryCacheKeys.CACHE_TIMESTAMP, date_end)
                 self.cache.set_item(CtmRepositoryCacheKeys.CACHE_POPULATE_DURATION, diff_seconds)
-                parser.logger.warning(f"Parsing started at [{date_start}], finished at [{date_end}]. "
-                                      f"Duration = {diff_seconds} seconds")
+                parser.logger.info(f"Parsing started at [{date_start}], finished at [{date_end}]. "
+                                   f"Duration = {diff_seconds} seconds")
                 task_meta.set_finished(date_end)
                 self._cache_task = None
 

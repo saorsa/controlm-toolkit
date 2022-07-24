@@ -41,4 +41,3 @@ def servers_app_single(server: str,
         'status': 404,
         'message': f"Server '{server}' not found."
     }), 404
-
