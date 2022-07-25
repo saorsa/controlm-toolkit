@@ -4,11 +4,11 @@ from datetime import datetime
 from enum import Enum
 from logging import Logger
 from threading import Lock
-from typing import Final, Optional
+from typing import Final, Dict, Optional
 from uuid import uuid4
-
 from controlm.model import CtmDefTable
 from controlm.services import CtmXmlParser
+from controlm.services.dto import map_server_infos_from_ctm_model, DtoServerInfo
 from corelib.caching import CacheStore
 from corelib.logging import create_console_logger
 from corelib.threading import TaskRunner, TaskMetaData
@@ -24,6 +24,7 @@ class CtmCacheManagerKeys:
     CACHE_TIMESTAMP: Final = f"{__name__}.cache.timestamp"
 
     CONTROL_M_ALL_FOLDERS = f"{__name__}.cache.controlm.folders.all"
+    CONTROL_M_ALL_FOLDERS_DTO = f"{__name__}.cache.controlm.folders.all.dto"
     CONTROL_M_SERVERS = f"{__name__}.cache.controlm.servers"
     CONTROL_M_SERVER_INFOS = f"{__name__}.cache.controlm.server.infos"
 
@@ -112,8 +113,10 @@ class CtmCacheManager (ABC):
                              def_table: CtmDefTable,
                              data_center_keys: [str],
                              data_center_aggregates: dict) -> None:
+        mapped = map_server_infos_from_ctm_model(def_table, self.logger)
         self.cache.set_items_from_dict({
             CtmCacheManagerKeys.CONTROL_M_ALL_FOLDERS: def_table,
+            CtmCacheManagerKeys.CONTROL_M_ALL_FOLDERS_DTO: mapped,
             CtmCacheManagerKeys.CONTROL_M_SERVERS: data_center_keys,
             CtmCacheManagerKeys.CONTROL_M_SERVER_INFOS: data_center_aggregates,
             CtmCacheManagerKeys.CACHE_STATE: CtmCacheManagerState.COMPLETE,
@@ -154,21 +157,6 @@ class CtmCacheManager (ABC):
                 def_table = parser.parse_xml('./resources/PROD_CTM.all.xml')
                 data_center_keys = []
                 data_center_aggregates = {}
-                for item in def_table.items:
-                    if hasattr(item, 'data_center'):
-                        if item.data_center not in data_center_keys:
-                            data_center_keys.append(item.data_center)
-                        if item.data_center not in data_center_aggregates:
-                            data_center_aggregates[item.data_center] = {
-                                'applications': {}
-                            }
-                        data_center_apps = data_center_aggregates[item.data_center]['applications']
-                        if hasattr(item, 'application') and item.application:
-                            if item.application not in data_center_apps:
-                                data_center_apps[item.application] = []
-                            active_app_subs = data_center_apps[item.application]
-                            if hasattr(item, 'sub_application') and item.sub_application not in active_app_subs:
-                                active_app_subs.append(item.sub_application)
                 self.set_caching_complete(def_table, data_center_keys, data_center_aggregates)
             except BaseException as ex:
                 self.set_caching_failed(ex)
@@ -195,5 +183,5 @@ class CtmCacheManager (ABC):
     def get_cached_server_names(self) -> [str]:
         return self.cache.get_item(CtmCacheManagerKeys.CONTROL_M_SERVERS) if self.is_cache_ready else []
 
-    def get_cached_server_aggregate_stats(self) -> dict:
-        return self.cache.get_item(CtmCacheManagerKeys.CONTROL_M_SERVER_INFOS) if self.is_cache_ready else {}
+    def get_cached_server_infos_dto(self) -> Dict[str, DtoServerInfo]:
+        return self.cache.get_item(CtmCacheManagerKeys.CONTROL_M_ALL_FOLDERS_DTO) if self.is_cache_ready else {}

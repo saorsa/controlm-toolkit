@@ -132,6 +132,7 @@ class CtmXmlParser:
         result = CtmSimpleFolder(xml_element.tag)
         result.data_center = data_center
         result.folder_name = folder_name
+        result.folder_order_method = self.parse_attribute_value_or_default(xml_element, 'FOLDER_ORDER_METHOD')
         for child in xml_element:
             if child.tag == 'JOB':
                 job_data = self.parse_job_data(child)
@@ -152,6 +153,7 @@ class CtmXmlParser:
         result = CtmSmartFolder(xml_element.tag)
         result.data_center = data_center
         result.folder_name = folder_name
+        result.folder_order_method = self.parse_attribute_value_or_default(xml_element, 'FOLDER_ORDER_METHOD')
         result.description = self.parse_attribute_value_or_default(xml_element, 'DESCRIPTION')
         result.application = self.parse_attribute_value_or_default(xml_element, 'APPLICATION')
         result.sub_application = self.parse_attribute_value_or_default(xml_element, 'SUB_APPLICATION')

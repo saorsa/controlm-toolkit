@@ -6,8 +6,7 @@ from dependency_injector.wiring import Provide, inject
 from flask import Flask
 from controlm.di import DIRestServer
 from controlm.services import CtmCacheManager
-from controlm.rest_server.blueprints import meta_endpoint, cache_blueprint, tasks_blueprint
-from controlm.rest_server.blueprints.servers import data_centers_blueprint
+from controlm.rest_server.blueprints import meta_endpoint, cache_blueprint, tasks_blueprint, data_centers_blueprint
 
 
 class CtmRestServerJSONEncoder(json.JSONEncoder):

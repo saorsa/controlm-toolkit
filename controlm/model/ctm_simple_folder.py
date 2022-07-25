@@ -7,6 +7,7 @@ class CtmSimpleFolder (CtmDefTableItem):
 
     def __init__(self, tag_name: str):
         super().__init__(tag_name)
+        self.folder_order_method: Optional[str] = None
         self.folder_name: Optional[str] = None
         self.jobs: List[CtmJobData] = []
 
