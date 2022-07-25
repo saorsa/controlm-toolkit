@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Control-M XML Parser (Demo Run)" type="PythonConfigurationType" factoryName="Python">
+  <configuration default="false" name="Control-M Rest Server" type="PythonConfigurationType" factoryName="Python">
     <module name="controlm-toolkit" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
