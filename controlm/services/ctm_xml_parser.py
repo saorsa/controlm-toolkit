@@ -2,7 +2,7 @@ import os.path
 from logging import Logger
 from typing import Final, Optional
 from lxml import etree
-from common.logging import create_console_logger
+from corelib.logging import create_console_logger
 from controlm.model.ctm_def_table import CtmDefTable
 from controlm.model.ctm_def_table_item import CtmDefTableItem
 from controlm.model.ctm_simple_folder import CtmSimpleFolder
@@ -132,6 +132,13 @@ class CtmXmlParser:
         result = CtmSimpleFolder(xml_element.tag)
         result.data_center = data_center
         result.folder_name = folder_name
+        for child in xml_element:
+            if child.tag == 'JOB':
+                job_data = self.parse_job_data(child)
+                self.logger.debug(f"Processed child job {child.tag}: {job_data.__dict__}")
+                result.jobs.append(job_data)
+            else:
+                self.logger.debug(f"Unsupported SIMPLE_FOLDER child element {child.tag}")
         return result
 
     def parse_smart_folder(self, xml_element: etree.ElementTree) -> CtmDefTableItem:

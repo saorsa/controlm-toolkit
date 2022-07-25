@@ -1,7 +1,7 @@
 from dependency_injector import containers, providers
-from common.logging import create_console_logger
-from common.caching import CacheStore
-from common.threading import TaskRunner
+from corelib.logging import create_console_logger
+from corelib.caching import CacheStore
+from corelib.threading import TaskRunner
 
 
 class DICore(containers.DeclarativeContainer):

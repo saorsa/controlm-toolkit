@@ -1,7 +1,7 @@
 import unittest
 from parameterized import parameterized
-from common import Environment, CommonEnvironmentType
-from common.utils import generate_random_string
+from corelib import Environment, CommonEnvironmentType
+from corelib.utils import generate_random_string
 
 
 class EnvironmentTestCase(unittest.TestCase):

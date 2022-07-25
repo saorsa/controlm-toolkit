@@ -4,7 +4,7 @@ from logging import Logger
 from threading import Lock
 from uuid import uuid4
 from typing import Optional, Dict
-from common.logging import create_console_logger
+from corelib.logging import create_console_logger
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, Future
 

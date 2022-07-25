@@ -5,9 +5,9 @@ from datetime import datetime
 from dependency_injector.wiring import Provide, inject
 from flask import Flask
 from controlm.di import DIRestServer
-from controlm.services import CtmRepository
+from controlm.services import CtmCacheManager
 from controlm.rest_server.blueprints import meta_endpoint, cache_blueprint, tasks_blueprint
-from controlm.rest_server.blueprints.data_centers import data_centers_blueprint
+from controlm.rest_server.blueprints.servers import data_centers_blueprint
 
 
 class CtmRestServerJSONEncoder(json.JSONEncoder):
@@ -51,9 +51,9 @@ class CtmRestServer(ABC):
 
     @inject
     def run(self,
-            repo: CtmRepository = Provide[DIRestServer.ctm_repository],
+            cache_manager: CtmCacheManager = Provide[DIRestServer.shared_cache_manager],
             **kwargs):
-        repo.schedule_populate_cache()
+        cache_manager.schedule_populate_cache()
         self.app.run(**kwargs)
 
 

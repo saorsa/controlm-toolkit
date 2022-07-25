@@ -1,6 +1,6 @@
 import random
 import unittest
-from common.utils import generate_random_string
+from corelib.utils import generate_random_string
 
 
 class StringUtilsTestCase(unittest.TestCase):
