@@ -3,7 +3,7 @@ from uuid import uuid4
 from logging import Logger
 from typing import Dict, Optional
 from threading import Lock
-from common.logging.helpers import create_console_logger
+from corelib.logging.helpers import create_console_logger
 
 
 class CacheStore (ABC):

@@ -1,8 +1,8 @@
 from dependency_injector.wiring import Provide, inject
 from flask import Blueprint, jsonify
-from common.caching import CacheStore
+from corelib.caching import CacheStore
 from controlm.di.di_rest_server import DIRestServer
-from controlm.services import CtmRepository
+from controlm.services import CtmCacheManager
 
 cache_blueprint = Blueprint('cache', __name__, template_folder='templates')
 
@@ -16,20 +16,20 @@ def get_shared_cache_keys(cache: CacheStore = Provide[DIRestServer.shared_cache]
 
 @cache_blueprint.route('/cache/state', methods=['GET'])
 @inject
-def get_shared_cache_state(ctm_repository: CtmRepository = Provide[DIRestServer.ctm_repository]):
+def get_shared_cache_state(cache_manager: CtmCacheManager = Provide[DIRestServer.shared_cache_manager]):
     return jsonify({
-        'state': ctm_repository.cache_state,
-        'error': ctm_repository.cache_error,
-        'ready': ctm_repository.is_cache_ready,
-        'timestamp': ctm_repository.cache_timestamp,
-        'parsingInterval': ctm_repository.cache_populate_duration,
+        'state': cache_manager.cache_state,
+        'error': cache_manager.cache_error,
+        'ready': cache_manager.is_cache_ready,
+        'timestamp': cache_manager.cache_timestamp,
+        'parsingInterval': cache_manager.cache_populate_duration,
     })
 
 
 @cache_blueprint.route('/cache/populate', methods=['GET', 'POST', 'PUT'])
 @inject
-def schedule_populate_cache(ctm_repository: CtmRepository = Provide[DIRestServer.ctm_repository]):
-    future = ctm_repository.schedule_populate_cache()
+def schedule_populate_cache(cache_manager: CtmCacheManager = Provide[DIRestServer.shared_cache_manager]):
+    future = cache_manager.schedule_populate_cache()
     return jsonify({
         'task_started': True if future else False
     })

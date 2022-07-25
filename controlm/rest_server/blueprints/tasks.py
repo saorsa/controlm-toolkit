@@ -1,6 +1,6 @@
 from dependency_injector.wiring import Provide, inject
 from flask import Blueprint, jsonify
-from common.threading import TaskRunner
+from corelib.threading import TaskRunner
 from controlm.di.di_rest_server import DIRestServer
 
 

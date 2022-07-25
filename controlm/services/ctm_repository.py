@@ -1,9 +1,8 @@
 from abc import ABC
-from concurrent.futures import Future
-from datetime import datetime
-from enum import Enum
+from typing import Optional
 from uuid import uuid4
 from logging import Logger
+<<<<<<< HEAD
 from typing import Final, Optional
 from threading import Lock
 from common.caching import CacheStore
@@ -35,34 +34,31 @@ class CtmRepositoryCacheState (Enum):
     PROGRESS: str = 'PROGRESS',
     FAULT: str = 'FAULT',
     COMPLETE: str = 'COMPLETE'
+=======
+
+from controlm.services.dto import DtoServerInfo
+from corelib.logging import create_console_logger
+from controlm.services import CtmCacheManager
+>>>>>>> 629961e01142edb6567dcf185449bea1eb4c2cef
 
 
 class CtmRepository (ABC):
 
     def __init__(self,
-                 cache: CacheStore = None,
-                 task_runner: TaskRunner = None,
+                 cache_manager: CtmCacheManager = None,
                  logger: Logger = None):
         self._identifier: str = f"{__name__}_{uuid4()}"
         self._logger = logger or create_console_logger(__name__)
-        if cache is None:
-            self._logger.warning('Cache argument is None. Creating new cache instance.')
-        self._cache: CacheStore = cache or CacheStore()
-        if task_runner is None:
-            self._logger.warning('Task runner argument is None. Creating new task runner instance.')
-        self._task_runner: TaskRunner = task_runner or TaskRunner()
+        if cache_manager is None:
+            self._logger.warning(f'[{self.identifier}] Cache manager argument is None. Creating new manager instance.')
+        self._cache_manager: CtmCacheManager = cache_manager or CtmCacheManager()
         self._logger.info(f"Repository '{self.identifier}' initialized.")
-        self._cache_lock: Lock = Lock()
-        self._cache_process_lock: Lock = Lock()
-        self._cache_task: Optional[Future] = None
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.logger.info("Repository shutting down...")
-        self.task_runner.shutdown(wait=True)
-        self.logger.info("Repository shut down.")
+        self.logger.info(f"[{self.identifier}] Repository shutting down...")
 
     @property
     def logger(self) -> Logger:
@@ -73,27 +69,16 @@ class CtmRepository (ABC):
         return self._identifier
 
     @property
-    def task_runner(self) -> TaskRunner:
-        return self._task_runner
+    def cache_manager(self) -> CtmCacheManager:
+        return self._cache_manager
 
-    @property
-    def cache(self) -> CacheStore:
-        return self._cache
+    def get_server_names(self) -> [str]:
+        return self.cache_manager.get_cached_server_names()
 
-    @property
-    def cache_state(self) -> CtmRepositoryCacheState:
-        return self._cache.get_item(CtmRepositoryCacheKeys.CACHE_STATE) or CtmRepositoryCacheState.UNKNOWN
+    def get_server_aggregate_stats(self) -> dict:
+        return self.cache_manager.get_cached_server_aggregate_stats()
 
-    @property
-    def cache_error(self) -> any:
-        return self._cache.get_item(CtmRepositoryCacheKeys.CACHE_ERROR)
-
-    @property
-    def cache_timestamp(self) -> Optional[datetime]:
-        if self.is_cache_ready:
-            return self._cache.get_item(CtmRepositoryCacheKeys.CACHE_TIMESTAMP)
-        return None
-
+<<<<<<< HEAD
     @property
     def cache_populate_duration(self) -> Optional[float]:
         if self.is_cache_ready:
@@ -199,5 +184,13 @@ class CtmRepository (ABC):
             self.logger.info("Scheduling cache initialization task...")
             self._cache_task = self.task_runner.schedule_task(
                 self.populate_cache,
+=======
+    def get_server_info_or_default(self, server_name: str) -> Optional[DtoServerInfo]:
+        stats = self.get_server_aggregate_stats()
+        if server_name in stats:
+            return DtoServerInfo(
+                name=server_name,
+                application_keys=stats[server_name]['applications']
+>>>>>>> 629961e01142edb6567dcf185449bea1eb4c2cef
             )
-            return self._cache_task
+        return None

@@ -3,4 +3,8 @@ lxml~=4.9.1
 Flask==2.1.3
 dependency-injector==4.39.1
 bootstrap_flask==2.0.2
+<<<<<<< HEAD
 argparse==1.4.0
+=======
+argparse>=1.4.0
+>>>>>>> 629961e01142edb6567dcf185449bea1eb4c2cef
