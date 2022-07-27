@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from logging import Logger
 from threading import Lock
-from typing import Final, Dict, Optional
+from typing import Final, Dict, Optional, List
 from uuid import uuid4
 from controlm.model import CtmDefTable
 from controlm.services import CtmXmlParser
@@ -109,16 +109,13 @@ class CtmCacheManager (ABC):
         })
         self.logger.info(f"[{self.identifier}] Caching has started.")
 
-    def set_caching_complete(self,
-                             def_table: CtmDefTable,
-                             data_center_keys: [str],
-                             data_center_aggregates: dict) -> None:
+    def set_caching_complete(self, def_table: CtmDefTable) -> None:
         mapped = map_server_infos_from_ctm_model(def_table, self.logger)
+        data_center_keys = list(mapped.keys())
         self.cache.set_items_from_dict({
             CtmCacheManagerKeys.CONTROL_M_ALL_FOLDERS: def_table,
             CtmCacheManagerKeys.CONTROL_M_ALL_FOLDERS_DTO: mapped,
             CtmCacheManagerKeys.CONTROL_M_SERVERS: data_center_keys,
-            CtmCacheManagerKeys.CONTROL_M_SERVER_INFOS: data_center_aggregates,
             CtmCacheManagerKeys.CACHE_STATE: CtmCacheManagerState.COMPLETE,
         })
         self.logger.info(f"[{self.identifier}] Caching complete.")
@@ -155,9 +152,7 @@ class CtmCacheManager (ABC):
             parser = CtmXmlParser()
             try:
                 def_table = parser.parse_xml('./resources/PROD_CTM.all.xml')
-                data_center_keys = []
-                data_center_aggregates = {}
-                self.set_caching_complete(def_table, data_center_keys, data_center_aggregates)
+                self.set_caching_complete(def_table)
             except BaseException as ex:
                 self.set_caching_failed(ex)
             finally:
@@ -180,7 +175,7 @@ class CtmCacheManager (ABC):
             )
             return self._cache_task
 
-    def get_cached_server_names(self) -> [str]:
+    def get_cached_server_names(self) -> List[str]:
         return self.cache.get_item(CtmCacheManagerKeys.CONTROL_M_SERVERS) if self.is_cache_ready else []
 
     def get_cached_server_infos_dto(self) -> Dict[str, DtoServerInfo]:

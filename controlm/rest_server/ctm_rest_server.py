@@ -4,9 +4,11 @@ from abc import ABC
 from datetime import datetime
 from dependency_injector.wiring import Provide, inject
 from flask import Flask
+from flask_cors import CORS
 from controlm.di import DIRestServer
 from controlm.services import CtmCacheManager
-from controlm.rest_server.blueprints import meta_endpoint, cache_blueprint, tasks_blueprint, data_centers_blueprint
+from controlm.rest_server.blueprints import meta_endpoint, \
+    cache_blueprint, tasks_blueprint, servers_blueprint, hosts_blueprint
 
 
 class CtmRestServerJSONEncoder(json.JSONEncoder):
@@ -45,8 +47,10 @@ class CtmRestServer(ABC):
         self.app.json_encoder = CtmRestServerJSONEncoder
         self.app.register_blueprint(meta_endpoint)
         self.app.register_blueprint(cache_blueprint)
-        self.app.register_blueprint(data_centers_blueprint)
+        self.app.register_blueprint(servers_blueprint)
         self.app.register_blueprint(tasks_blueprint)
+        self.app.register_blueprint(hosts_blueprint)
+        CORS(self.app)
 
     @inject
     def run(self,
