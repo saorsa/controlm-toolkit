@@ -2,6 +2,7 @@ from dependency_injector.wiring import Provide, inject
 from flask import Blueprint, jsonify
 from controlm.services import CtmRepository
 from controlm.di.di_rest_server import DIRestServer
+from controlm.services.dto.node_info import DtoNodeInfo
 
 hosts_blueprint = Blueprint('hosts', __name__, template_folder='templates')
 
@@ -36,8 +37,18 @@ def get_node_stats(server: str, repository: CtmRepository = Provide[DIRestServer
 @inject
 def get_node(server: str, host: str, repository: CtmRepository = Provide[DIRestServer.ctm_repository]):
     try:
-        node = repository.fetch_node_or_die(server, host)
-        return jsonify(node)
+        host_ref = repository.fetch_host_or_default(server, host)
+        node = repository.fetch_node_or_default(server, host)
+        if node:
+            node.hosts = repository.fetch_hosts(server, host)
+            if host_ref:
+                node.group = host_ref.group
+            return jsonify(node)
+        elif host_ref:
+            result = DtoNodeInfo()
+            return jsonify(result)
+        else:
+            raise NameError(f"Host group '{host}' not found.")
     except NameError as err:
         jsonify({
             'status': 404,

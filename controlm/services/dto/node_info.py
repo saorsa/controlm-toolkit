@@ -1,10 +1,13 @@
 from abc import ABC
-from typing import List
+from typing import List, Optional
+from .host_info import DtoHostInfo
 
 
 class DtoNodeInfo(ABC):
 
     def __init__(self):
+        self.hosts: List[DtoHostInfo] = []
+        self.group: Optional[str] = None
         self.folders: List[str] = []
         self.jobs: List[str] = []
 

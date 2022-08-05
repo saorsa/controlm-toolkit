@@ -3,6 +3,7 @@ from uuid import uuid4
 from logging import Logger
 from typing import Dict, Optional, List
 from controlm.services.dto.node_info import DtoNodeInfo
+from controlm.services.dto.host_info import DtoHostInfo
 from corelib.logging import create_console_logger
 from controlm.services import CtmCacheManager
 from controlm.services.dto import DtoServerInfo, DtoFolderInfo
@@ -136,3 +137,18 @@ class CtmRepository (ABC):
                 'disabled': [f.name for f in disabled],
             }
         return result
+
+    def fetch_host_or_default(self, server_name: str, host_name: str) -> Optional[DtoHostInfo]:
+        hosts = self.cache_manager.get_cached_host_infos_dto()
+        for h in hosts:
+            if h.server == server_name and h.host == host_name:
+                return h
+        return None
+
+    def fetch_hosts(self, server_name: str, node_group: str = None) -> List[DtoHostInfo]:
+        hosts = self.cache_manager.get_cached_host_infos_dto()
+        results: List[DtoHostInfo] = []
+        for h in hosts:
+            if h.server == server_name and (node_group is None or h.group == node_group):
+                results.append(h)
+        return results

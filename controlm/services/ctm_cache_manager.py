@@ -7,8 +7,8 @@ from threading import Lock
 from typing import Final, Dict, Optional, List
 from uuid import uuid4
 from controlm.model import CtmDefTable
-from controlm.services import CtmXmlParser
-from controlm.services.dto import map_server_infos_from_ctm_model, DtoServerInfo
+from controlm.services import CtmXmlParser, CtmCsvParser
+from controlm.services.dto import map_server_infos_from_ctm_model, DtoServerInfo, DtoHostInfo
 from corelib.caching import CacheStore
 from corelib.logging import create_console_logger
 from corelib.threading import TaskRunner, TaskMetaData
@@ -27,6 +27,7 @@ class CtmCacheManagerKeys:
     CONTROL_M_ALL_FOLDERS_DTO = f"{__name__}.cache.controlm.folders.all.dto"
     CONTROL_M_SERVERS = f"{__name__}.cache.controlm.servers"
     CONTROL_M_SERVER_INFOS = f"{__name__}.cache.controlm.server.infos"
+    CONTROL_M_HOST_INFOS = f"{__name__}.cache.controlm.hosts.all"
 
 
 class CtmCacheManagerState (Enum):
@@ -109,12 +110,13 @@ class CtmCacheManager (ABC):
         })
         self.logger.info(f"[{self.identifier}] Caching has started.")
 
-    def set_caching_complete(self, def_table: CtmDefTable) -> None:
+    def set_caching_complete(self, node_ids: List[DtoHostInfo], def_table: CtmDefTable) -> None:
         mapped = map_server_infos_from_ctm_model(def_table, self.logger)
         data_center_keys = list(mapped.keys())
         self.cache.set_items_from_dict({
             CtmCacheManagerKeys.CONTROL_M_ALL_FOLDERS: def_table,
             CtmCacheManagerKeys.CONTROL_M_ALL_FOLDERS_DTO: mapped,
+            CtmCacheManagerKeys.CONTROL_M_HOST_INFOS: node_ids,
             CtmCacheManagerKeys.CONTROL_M_SERVERS: data_center_keys,
             CtmCacheManagerKeys.CACHE_STATE: CtmCacheManagerState.COMPLETE,
         })
@@ -149,10 +151,14 @@ class CtmCacheManager (ABC):
                 return
             self.set_caching_in_progress()
             date_start = datetime.now()
+
+            csv_parser = CtmCsvParser()
+
             parser = CtmXmlParser()
             try:
-                def_table = parser.parse_xml('./resources/PROD_CTM.all.xml')
-                self.set_caching_complete(def_table)
+                node_ids = csv_parser.parse_node_ids()
+                def_table = parser.parse_xml('./resources/PROD_CTM.all.20220803.xml')
+                self.set_caching_complete(node_ids, def_table)
             except BaseException as ex:
                 self.set_caching_failed(ex)
             finally:
@@ -180,3 +186,6 @@ class CtmCacheManager (ABC):
 
     def get_cached_server_infos_dto(self) -> Dict[str, DtoServerInfo]:
         return self.cache.get_item(CtmCacheManagerKeys.CONTROL_M_ALL_FOLDERS_DTO) if self.is_cache_ready else {}
+
+    def get_cached_host_infos_dto(self) -> List[DtoHostInfo]:
+        return self.cache.get_item(CtmCacheManagerKeys.CONTROL_M_HOST_INFOS) if self.is_cache_ready else []
