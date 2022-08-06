@@ -38,12 +38,12 @@ def get_node_stats(server: str, repository: CtmRepository = Provide[DIRestServer
 def get_node(server: str, host: str, repository: CtmRepository = Provide[DIRestServer.ctm_repository]):
     try:
         host_ref = repository.fetch_host_or_default(server, host)
-        node = repository.fetch_node_or_default(server, host)
-        if node:
-            node.hosts = repository.fetch_hosts(server, host)
+        node_ref = repository.fetch_node_or_default(server, host)
+        if node_ref:
+            node_ref.hosts = repository.fetch_hosts(server, host)
             if host_ref:
-                node.group = host_ref.group
-            return jsonify(node)
+                node_ref.group = host_ref.group
+            return jsonify(node_ref)
         elif host_ref:
             result = DtoNodeInfo()
             return jsonify(result)
